@@ -4132,12 +4132,18 @@ window.__ModuleLoader__.load({
                     minHeight: 0,
                   },
                 },
-                (aiDocument.flows ?? []).length > 1
-                  ? h(
-                      'div',
-                      { style: { display: 'flex', gap: 8, alignItems: 'center' } },
-                      h('span', { style: { fontSize: 11, opacity: 0.6 } }, t.aiPickFlow),
-                      h(
+                // One row for everything that acts on the diagram: which process
+                // is shown, whether the original side is shown, and how far it is
+                // zoomed. The row stays even with a single process, or the other
+                // controls would vanish with it.
+                h(
+                  'div',
+                  { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
+                  (aiDocument.flows ?? []).length > 1
+                    ? h('span', { style: { fontSize: 11, opacity: 0.6 } }, t.aiPickFlow)
+                    : null,
+                  (aiDocument.flows ?? []).length > 1
+                    ? h(
                         'select',
                         {
                           value: String(aiFlow),
@@ -4148,16 +4154,7 @@ window.__ModuleLoader__.load({
                           h('option', { key: flow.id, value: String(index) }, flow.title)
                         )
                       )
-                    )
-                  : null,
-                selectedFlow === null
-                  ? null
-                  : h(
-                      'div',
-                      { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
-                      h(
-                        'div',
-                        { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
+                    : null,
                         h(
                           Button,
                           { active: aiBefore, onClick: () => setAiBefore((value) => !value) },
@@ -4172,7 +4169,12 @@ window.__ModuleLoader__.load({
                         ),
                         h(Button, { onClick: () => setAiZoom((z) => Math.min(4, z + 0.25)) }, '+'),
                         h(Button, { onClick: () => setAiZoom(1) }, t.aiZoomFit)
-                      ),
+                ),
+                selectedFlow === null
+                  ? null
+                  : h(
+                      'div',
+                      { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
                       // The original side is worth keeping, but a complicated
                       // change needs the whole width: it folds on request.
                       h(
