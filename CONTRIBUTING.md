@@ -34,11 +34,22 @@ Explain *why*, not *what*. The diff already says what changed.
 
 ## Releasing
 
-1. Bump `version` in `package.json`, commit, push to `main`.
-2. Tag and push the tag: `git tag v<version> && git push origin v<version>`.
-3. `.github/workflows/publish.yml` then builds, runs the self-checks and publishes to npm with
-   provenance. It needs the repository secret `NPM_TOKEN`: an npm **Automation** token (that type skips
-   the one-time-password prompt, which a runner cannot answer).
+The first version goes out by hand, because npm's trusted-publishing settings page only exists once the
+package does:
 
-Publishing by hand works too — `npm publish` runs `prepublishOnly` → `npm run verify` — but the workflow
-is the path that does not depend on the maintainer's network.
+```bash
+npm publish --otp=<code from the authenticator>
+```
+
+After that, configure **Trusted publishing** on the package's settings page (repository
+`huaxiaolong/dsh-review-graph`, workflow `publish.yml`) and let `.github/workflows/publish.yml` do the
+rest — it needs no stored secret, and it publishes with provenance:
+
+```bash
+# bump version in package.json, commit, push
+git tag v<version> && git push origin v<version>
+```
+
+Why OIDC rather than an `NPM_TOKEN`: npm is removing direct publish from tokens that bypass 2FA
+(targeted for January 2027), so a stored token would stop working. Trusted publishing replaces it with a
+short-lived credential minted per run.

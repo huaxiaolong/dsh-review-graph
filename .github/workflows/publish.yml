@@ -1,13 +1,16 @@
-# Publish on a version tag, from GitHub's runners.
+# Publish on a version tag, from GitHub's runners, with no token at all.
 #
-# This exists because npm's signup page refuses some networks: once the token is
-# a repository secret, a release no longer depends on where the maintainer is
-# sitting. `--provenance` signs the tarball against this workflow, so consumers
-# can check it came from this repository and this commit.
+# npm is removing direct publish from tokens that bypass 2FA (targeted for
+# January 2027), so a stored NPM_TOKEN is not a durable answer. Trusted
+# publishing instead trusts this repository's workflow through OIDC: the runner
+# proves which repo, workflow and commit it is, and npm mints a short-lived
+# credential for that publish alone. Nothing secret is stored here.
 #
-# Setup (once): create an npm **Automation** token and add it as the repository
-# secret NPM_TOKEN. Automation tokens are made for non-interactive publishing,
-# so they skip the one-time password prompt.
+# Setup (once, on npmjs.com): the package's settings page → Trusted publishing →
+# add a publisher: repository huaxiaolong/dsh-review-graph, workflow publish.yml.
+# The first version must be published with an OTP first, because the settings
+# page only exists once the package does:
+#   npm publish --otp=<code>
 name: publish
 
 on:
@@ -17,6 +20,7 @@ on:
 
 permissions:
   contents: read
+  # The OIDC token npm exchanges for a publish credential.
   id-token: write
 
 jobs:
@@ -30,7 +34,7 @@ jobs:
           node-version: 20
           registry-url: https://registry.npmjs.org
 
-      # Prism is a build-time dependency; the build fetches it (needs no npm).
+      # Prism is a build-time dependency; the build fetches it.
       - name: Build
         run: node build-vendor.mjs && node build-client.mjs
 
@@ -42,7 +46,7 @@ jobs:
           node test/diff-parse.mjs
           node test/flow-parse.mjs
 
+      # No NODE_AUTH_TOKEN: trusted publishing supplies the credential, and
+      # --provenance signs the tarball against this workflow and commit.
       - name: Publish
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
