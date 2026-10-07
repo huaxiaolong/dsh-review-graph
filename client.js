@@ -689,6 +689,7 @@ window.__ModuleLoader__.load({
         aiNoTalk: '（这段会话还没读到可用于推理的消息）',
         aiModel: (name) => `模型：${name}`,
         aiModelUnknown: '模型：未从会话读到，将使用默认 provider',
+        aiNoModel: '还没有确定用哪个模型：请确认对话区已选择模型，或稍后重试（计划加载完成后即可）。',
         aiGenerate: '生成',
         aiGenerating: '正在推理…（会消耗 token）',
         aiRebuild: '重新生成',
@@ -824,6 +825,7 @@ window.__ModuleLoader__.load({
         aiNoTalk: '(this session holds no messages to reason from yet)',
         aiModel: (name) => `Model: ${name}`,
         aiModelUnknown: 'Model: not read from this session; the default provider will be used',
+        aiNoModel: 'No model is known yet. Check that the conversation has one selected, or try again in a moment.',
         aiGenerate: 'Generate',
         aiGenerating: 'Thinking… (this spends tokens)',
         aiRebuild: 'Regenerate',
@@ -2265,6 +2267,29 @@ window.__ModuleLoader__.load({
      * The view is rendered from a dictionary that a build or a locale can leave
      * incomplete; a missing plural helper must not empty the tab.
      */
+    /**
+     * The model a generation will use.
+     *
+     * The conversation owns the model, the plan's catalogue is the fallback, and
+     * the plan reports the pair it resolved as a last resort. Anything else
+     * returns `null` — so the caller must handle "no model yet" rather than
+     * reading a property off nothing.
+     */
+    function modelForGeneration(sessionModel, plan) {
+      const session = sessionModel ?? null;
+      if (session !== null && typeof session.model === 'string' && session.model !== '') {
+        return { provider: session.provider ?? null, model: session.model };
+      }
+      const first = plan?.models?.[0];
+      if (first !== undefined && first !== null && typeof first.model === 'string' && first.model !== '') {
+        return { provider: first.provider ?? null, model: first.model };
+      }
+      if (typeof plan?.plan?.model === 'string' && plan.plan.model !== '') {
+        return { provider: plan.plan.provider ?? null, model: plan.plan.model };
+      }
+      return null;
+    }
+
     function copyText(t, key, ...args) {
       const value = t === null || t === undefined ? undefined : t[key];
       if (typeof value === 'function') return value(...args);
@@ -3080,6 +3105,12 @@ window.__ModuleLoader__.load({
        */
       const [zen, setZen] = useState(false);
       const [aiPlan, setAiPlan] = useState(null);
+
+      // The conversation area owns the model; this pane only falls back, and it
+      // may legitimately have none yet (no selection event, plan still loading).
+      // Declared here, before every consumer: a dependency array is evaluated
+      // during render, so a later declaration is a temporal-dead-zone crash.
+      const aiModel = useMemo(() => modelForGeneration(sessionModel, aiPlan), [sessionModel, aiPlan]);
       const [aiDocument, setAiDocument] = useState(null);
       const [aiError, setAiError] = useState(null);
       const [aiBusy, setAiBusy] = useState(false);
@@ -3092,7 +3123,7 @@ window.__ModuleLoader__.load({
       }, [aiFlow, aiDocument]);
       /** The pair a generation will use: the session's own, or a chosen one. */
       /** The conversation area's model; this pane never chooses its own. */
-      let aiModel = null;
+      // derived below, once the session and the plan are both known
       /** Off by default: a record joins the model context on later turns. */
       const [aiRecord, setAiRecord] = useState(false);
       const [aiDebug, setAiDebug] = useState(false);
@@ -3257,6 +3288,13 @@ window.__ModuleLoader__.load({
               body.instruction = t.aiInstruction;
               if (typeof sessionId === 'string') body.sessionId = sessionId;
             }
+            if (aiModel === null) {
+              // Reading a property off nothing here is what broke Generate in a
+              // real session: say what is missing instead.
+              setAiError(copyText(t, 'aiNoModel'));
+              setAiBusy(false);
+              return;
+            }
             const chosenProvider = aiModel.provider;
             const chosenModel = aiModel.model;
             if (chosenProvider !== undefined) body.provider = chosenProvider;
@@ -3357,16 +3395,6 @@ window.__ModuleLoader__.load({
         return () => controller.abort();
       }, [mode, root, source, baseRef, commitRef, sessionModel, conversation, aiPlan, aiKey, generateFlow]);
 
-      // The conversation area owns the model. This pane falls back to the first
-      // pair the profile advertises, so a first generation never fails for lack
-      // of one, and never offers a choice of its own.
-      const chosenModel =
-        sessionModel?.model !== undefined
-          ? sessionModel
-          : aiPlan?.models?.[0] !== undefined
-            ? { provider: aiPlan.models[0].provider, model: aiPlan.models[0].model }
-            : {};
-      aiModel = chosenModel.model === undefined ? null : chosenModel;
 
 
       /** Open the review pane at the file and line one AI node was based on. */
@@ -3837,9 +3865,9 @@ window.__ModuleLoader__.load({
                      typeof aiDocument.generatedAt === 'string' ? t.aiGeneratedAt(aiDocument.generatedAt.slice(0, 19).replace('T', ' ')) : null]
                       .filter(Boolean).join(' · '))
                 : h('span', { style: { fontSize: 11, opacity: 0.7 } },
-                    typeof chosenModel.model === 'string'
-                      ? t.aiModel(`${chosenModel.provider ?? ''} ${chosenModel.model}`.trim())
-                      : t.aiModelUnknown),
+                    aiModel === null
+                      ? t.aiModelUnknown
+                      : t.aiModel(`${aiModel.provider ?? ''} ${aiModel.model}`.trim())),
               h(
                 'label',
                 {
@@ -4657,6 +4685,7 @@ window.__ModuleLoader__.load({
         ReviewGraphView,
         ReviewGraphBody,
         layoutGraph,
+        modelForGeneration,
         analyze,
         unwrapRemote,
         listSourceFiles,

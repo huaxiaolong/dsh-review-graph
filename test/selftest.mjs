@@ -1332,16 +1332,43 @@ process.stdout.write('loaded-state rendering\n');
       source.includes('aiNode.startsWith(`${sideName}:`)') &&
       source.includes('setAiNode(null);')
   );
+  // A real session crashed Generate with "Cannot read properties of null
+  // (reading 'provider')" when no model was known yet; the picker is a pure
+  // function now, so the empty case is a value rather than an exception.
+  const pick = testHooks.modelForGeneration;
+  check(
+    'the generation model comes from the conversation first',
+    JSON.stringify(pick({ provider: 'p', model: 'm' }, null)) === JSON.stringify({ provider: 'p', model: 'm' })
+  );
+  check(
+    'then from the plan catalogue, then from the plan itself',
+    JSON.stringify(pick(null, { models: [{ provider: 'a', model: 'b' }] })) ===
+      JSON.stringify({ provider: 'a', model: 'b' }) &&
+      JSON.stringify(pick(null, { plan: { provider: 'c', model: 'd' } })) ===
+        JSON.stringify({ provider: 'c', model: 'd' })
+  );
+  check(
+    'and is null when nothing is known, which the caller must handle',
+    pick(null, null) === null &&
+      pick(undefined, {}) === null &&
+      pick({ model: '' }, { models: [] }) === null &&
+      // the crash this replaced: reading .provider off the result
+      source.includes('if (aiModel === null) {') &&
+      source.includes("copyText(t, 'aiNoModel')")
+  );
   check(
     'the model comes from the conversation area, with no picker here',
     !source.includes('setAiModel') &&
       !source.includes('aiPlan?.models ?? []).length > 1') &&
-      source.includes('const chosenModel =') &&
-      source.includes('t.aiModel(`${chosenModel.provider')
+      // One derivation, before every consumer, and the header reads it too.
+      source.includes('const aiModel = useMemo(() => modelForGeneration(') &&
+      source.includes('t.aiModel(`${aiModel.provider ?? \'\'} ${aiModel.model}`')
   );
   check(
     'the chosen pair is the pair the request sends',
-    source.includes('aiPlan?.models?.[0]') &&
+    // The fallback order lives in the pure picker now, so this only has to hold:
+    // the request is built from that one derivation, and no picker was reintroduced.
+    source.includes('const chosenProvider = aiModel.provider') &&
       !source.includes('setAiModel({') &&
       source.includes('body.provider = chosenProvider') &&
       source.includes('body.model = chosenModel')
