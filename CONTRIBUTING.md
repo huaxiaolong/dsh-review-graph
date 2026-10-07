@@ -31,3 +31,14 @@ three blank-tab bugs got caught, so please keep that property.
 ## Commits
 
 Explain *why*, not *what*. The diff already says what changed.
+
+## Releasing
+
+1. Bump `version` in `package.json`, commit, push to `main`.
+2. Tag and push the tag: `git tag v<version> && git push origin v<version>`.
+3. `.github/workflows/publish.yml` then builds, runs the self-checks and publishes to npm with
+   provenance. It needs the repository secret `NPM_TOKEN`: an npm **Automation** token (that type skips
+   the one-time-password prompt, which a runner cannot answer).
+
+Publishing by hand works too — `npm publish` runs `prepublishOnly` → `npm run verify` — but the workflow
+is the path that does not depend on the maintainer's network.

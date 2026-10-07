@@ -1,0 +1,48 @@
+# Publish on a version tag, from GitHub's runners.
+#
+# This exists because npm's signup page refuses some networks: once the token is
+# a repository secret, a release no longer depends on where the maintainer is
+# sitting. `--provenance` signs the tarball against this workflow, so consumers
+# can check it came from this repository and this commit.
+#
+# Setup (once): create an npm **Automation** token and add it as the repository
+# secret NPM_TOKEN. Automation tokens are made for non-interactive publishing,
+# so they skip the one-time password prompt.
+name: publish
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  npm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org
+
+      # Prism is a build-time dependency; the build fetches it (needs no npm).
+      - name: Build
+        run: node build-vendor.mjs && node build-client.mjs
+
+      - name: Self-checks
+        run: |
+          node test/selftest.mjs
+          node test/git-scopes.mjs
+          node test/host-routes.mjs
+          node test/diff-parse.mjs
+          node test/flow-parse.mjs
+
+      - name: Publish
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
