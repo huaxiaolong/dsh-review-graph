@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.0.3
+
+Layout, and one more blank pane.
+
+* **The original flow folds away and the diagrams zoom** (50%-400%). A complicated change squeezed both
+  sides until neither was readable; hiding a side hands the whole width to the other, and zooming widens
+  the svg inside a scrollable box so the text stays sharp.
+* **Those controls sit on the affected-process row**, with the process picker, rather than on a row of
+  their own. The row stays visible when a change has a single process, or the buttons would vanish with
+  the picker.
+* **The changed-file list moved to the right of the diff and folds away**, from a button beside "open in
+  file". The diff is what is being read; the rail was charging it width on every file.
+* **A blank review pane is fixed.** The file-list toggle declared its state below the header that read
+  it — the fourth crash of that shape. The pane is also rendered as an element inside its error boundary
+  now, so a crash in it shows the boundary's message instead of an empty pane.
+
 ## 1.0.2
 
 Fixes reported from real sessions.
