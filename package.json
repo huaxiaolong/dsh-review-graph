@@ -1,6 +1,6 @@
 {
   "name": "dsh-review-graph",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "description": "Review a change set as a relationship graph in the middle column, with every node clickable to the exact source line.",
   "exports": {
@@ -24,7 +24,8 @@
     "README.md",
     "docs",
     "CONTRIBUTING.md",
-    "README.en.md"
+    "README.en.md",
+    "CHANGELOG.md"
   ],
   "icon": "./icon.svg",
   "meta": {
