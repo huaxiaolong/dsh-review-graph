@@ -23,7 +23,8 @@
     "LICENSE",
     "README.md",
     "docs",
-    "CONTRIBUTING.md"
+    "CONTRIBUTING.md",
+    "README.en.md"
   ],
   "icon": "./icon.svg",
   "meta": {
