@@ -1415,6 +1415,17 @@ process.stdout.write('loaded-state rendering\n');
       source.includes('flowColumn(selectedFlow.before')
   );
   check(
+    'the model name is never printed as undefined',
+    // A real session showed "模型：undefined": the stored answer had no model
+    // (undefined is dropped by JSON.stringify) and the line printed it anyway.
+    testHooks.modelNameText('m', null) === 'm' &&
+      testHooks.modelNameText(undefined, { provider: 'p', model: 'f' }) === 'p f' &&
+      testHooks.modelNameText(null, { model: 'f' }) === 'f' &&
+      testHooks.modelNameText(undefined, null) === null &&
+      testHooks.modelNameText('', {}) === null &&
+      !source.includes('t.aiModel(aiDocument.model)')
+  );
+  check(
     'a step prefers a source file over a document',
     // A flow diagram whose steps land in Markdown is not answering "where is
     // this implemented"; the document stays available, but second.

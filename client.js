@@ -2305,6 +2305,21 @@ window.__ModuleLoader__.load({
      * returns `null` — so the caller must handle "no model yet" rather than
      * reading a property off nothing.
      */
+    /**
+     * The model name to print, never `undefined`.
+     *
+     * A result carries the model that answered it; an older entry may carry none,
+     * in which case the name of the model that would answer now is the honest
+     * thing to show, and the unknown copy is the fallback after that.
+     */
+    function modelNameText(answered, fallback) {
+      if (typeof answered === 'string' && answered !== '') return answered;
+      if (fallback !== null && fallback !== undefined && typeof fallback.model === 'string' && fallback.model !== '') {
+        return `${fallback.provider ?? ''} ${fallback.model}`.trim();
+      }
+      return null;
+    }
+
     function modelForGeneration(sessionModel, plan) {
       const session = sessionModel ?? null;
       if (session !== null && typeof session.model === 'string' && session.model !== '') {
@@ -3901,7 +3916,10 @@ window.__ModuleLoader__.load({
                 aiBusy ? t.aiGenerating : aiDocument === null ? t.aiGenerate : t.aiRebuild),
               aiDocument !== null
                 ? h('span', { style: { fontSize: 11, opacity: 0.7 } },
-                    [t.aiModel(aiDocument.model), aiDocument.usage?.outputTokens !== undefined ? `${aiDocument.usage.outputTokens} tok` : null,
+                    [modelNameText(aiDocument.model, aiModel) === null
+                      ? t.aiModelUnknown
+                      : t.aiModel(modelNameText(aiDocument.model, aiModel)),
+                     aiDocument.usage?.outputTokens !== undefined ? `${aiDocument.usage.outputTokens} tok` : null,
                      aiDocument.cached === true ? t.aiCached : null,
                      typeof aiDocument.generatedAt === 'string' ? t.aiGeneratedAt(aiDocument.generatedAt.slice(0, 19).replace('T', ' ')) : null]
                       .filter(Boolean).join(' · '))
@@ -4734,6 +4752,7 @@ window.__ModuleLoader__.load({
         ReviewGraphBody,
         layoutGraph,
         modelForGeneration,
+        modelNameText,
         isSourcePath,
         analyze,
         unwrapRemote,

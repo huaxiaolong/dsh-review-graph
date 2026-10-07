@@ -1190,7 +1190,9 @@ export function registerFlowRoute(ctx, exec, recorder, options = {}) {
             {
               ...stored.document,
               cached: true,
-              model: stored.model,
+              // An entry stored before this was normalised has no model; report
+              // the one this request resolved rather than nothing.
+              model: stored.model ?? model ?? null,
               provider: stored.provider,
               usage: stored.usage,
               generatedAt: stored.generatedAt,
@@ -1288,7 +1290,9 @@ export function registerFlowRoute(ctx, exec, recorder, options = {}) {
         };
         const entry = {
           document,
-          model,
+          // Normalised, both of them: `undefined` is dropped by JSON.stringify,
+          // so the stored document would come back without a model at all.
+          model: model ?? null,
           provider: provider ?? null,
           usage: usageNumbers(collected.usage),
           generatedAt: new Date().toISOString(),
@@ -1325,7 +1329,7 @@ export function registerFlowRoute(ctx, exec, recorder, options = {}) {
           {
             ...document,
             cached: false,
-            model,
+            model: model ?? null,
             provider: entry.provider,
             usage: entry.usage,
             generatedAt: entry.generatedAt,

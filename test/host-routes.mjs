@@ -651,6 +651,20 @@ try {
     'the recorded turn is not generated twice',
     recorded.cached === false && streamCalls >= 1
   );
+  // A model that is `undefined` is dropped by JSON.stringify, and the reader then
+  // saw "模型：undefined". The response must carry the key, even when nothing was
+  // resolved to put in it.
+  const withModel = await (
+    await flowPost(`cwd=${encodeURIComponent(root)}&scope=uncommitted&model=fake-model`, {
+      rebuild: true,
+    })
+  ).json();
+  check(
+    'a generation reports a model, never an absent field',
+    'model' in withModel && (typeof withModel.model === 'string' || withModel.model === null),
+    JSON.stringify({ model: withModel.model })
+  );
+
   const cachedRecord = await (
     await flowPost(`cwd=${encodeURIComponent(root)}&scope=unstaged&model=fake-model&record=true&sessionId=live-session`)
   ).json();
