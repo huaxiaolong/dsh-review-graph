@@ -1108,14 +1108,13 @@ export function registerFlowRoute(ctx, exec, recorder, options = {}) {
               return [];
             }
           })();
+          // Out of date means the *code* moved on. The conversation digest is a
+          // different thing: it changes whenever the session grows — including
+          // when a generation records itself into the conversation — and telling
+          // someone their answer is stale because they kept talking is wrong.
           const staleReason =
-            stored === undefined || fresh
-              ? null
-              : stored.head !== material.head && stored.contextHash !== contextHash
-                ? 'both'
-                : stored.head !== material.head
-                  ? 'head'
-                  : 'context';
+            stored === undefined || stored.head === material.head ? null : 'head';
+          const contextMoved = stored !== undefined && stored.contextHash !== contextHash;
           return Response.json(
             {
               diskCached: stored !== undefined,
@@ -1132,6 +1131,9 @@ export function registerFlowRoute(ctx, exec, recorder, options = {}) {
                       generatedAt: stored.generatedAt,
                       head: stored.head,
                       staleReason,
+                      // Reported, not treated as staleness: a new generation
+                      // would read this, the previous answer did not.
+                      contextMoved,
                     },
               plan: {
                 scope: material.graph.git?.label ?? spec.kind,

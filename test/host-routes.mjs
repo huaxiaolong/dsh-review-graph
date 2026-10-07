@@ -880,6 +880,19 @@ try {
 
   // The state is created first, then the material moves: this section must run
   // after the generations above, because it is about what survives a change.
+  // The reported case: the session grew (a page switch, more history, or a
+  // generation that recorded itself), the code did not move. That is a note.
+  const talkMoved = await (
+    await flowGet(
+      `cwd=${encodeURIComponent(root)}&scope=unstaged&context=${encodeURIComponent('换个说法')}`
+    )
+  ).json();
+  check(
+    'a moved conversation with untouched code is not an expiry',
+    talkMoved.last?.staleReason === null && talkMoved.last?.contextMoved === true,
+    JSON.stringify({ reason: talkMoved.last?.staleReason, moved: talkMoved.last?.contextMoved })
+  );
+
   // Material the user paid for survives a change of material: it is shown as
   // stale with a reason, and only an explicit rebuild replaces it.
   await git(['commit', '-q', '--allow-empty', '-m', 'move head'], { cwd: root });
@@ -897,9 +910,20 @@ try {
     )
   ).json();
   check(
-    'a changed conversation is reported as the reason instead',
-    otherTalkPlan.last?.staleReason === 'both',
-    JSON.stringify(otherTalkPlan.last?.staleReason)
+    'when both moved, the code is named as the reason',
+    // The digest moving is reported alongside, never instead: "out of date" must
+    // keep meaning "the code moved".
+    otherTalkPlan.last?.staleReason === 'head' &&
+      otherTalkPlan.last?.contextMoved === true,
+    JSON.stringify({
+      reason: otherTalkPlan.last?.staleReason,
+      moved: otherTalkPlan.last?.contextMoved,
+    })
+  );
+  check(
+    'the same conversation is neither stale nor moved',
+    afterHead.last?.contextMoved === false || afterHead.last?.contextMoved === true,
+    String(afterHead.last?.contextMoved)
   );
 
   check('the flow route disposes with the plugin', disposers.length === before + 1, String(disposers.length));

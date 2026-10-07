@@ -713,6 +713,7 @@ window.__ModuleLoader__.load({
             : `上次失败：${code}`, 
         aiCacheMemory: '本次页面已生成，切页签不丢（刷新后需重新加载）',
         aiStale: '已过期',
+        aiContextMoved: '对话摘要已更新——这份结果是之前的上下文生成的，重新生成会带上新内容。',
         aiStaleHead: 'HEAD 已经变了（分支上有新提交），这是上一次的结果',
         aiStaleContext: '对话摘要变了，这是上一次的结果',
         aiStaleBoth: 'HEAD 与对话摘要都变了，这是上一次的结果',
@@ -849,6 +850,7 @@ window.__ModuleLoader__.load({
             : `The last attempt failed: ${code}`,
         aiCacheMemory: 'Generated in this page; a view switch keeps it, a reload does not',
         aiStale: 'Out of date',
+        aiContextMoved: 'The conversation digest has moved on. This answer was generated from the earlier context; regenerating would include the new material.',
         aiStaleHead: 'HEAD moved on (the branch has new commits); this is the previous result',
         aiStaleContext: 'The conversation digest changed; this is the previous result',
         aiStaleBoth: 'HEAD and the conversation digest both moved; this is the previous result',
@@ -3128,6 +3130,8 @@ window.__ModuleLoader__.load({
       const [aiRecord, setAiRecord] = useState(false);
       const [aiDebug, setAiDebug] = useState(false);
       const [aiStale, setAiStale] = useState(null);
+      /** The digest moved, the code did not: a note, not an expiry. */
+      const [aiContextMoved, setAiContextMoved] = useState(false);
       /** Reasoning strength, when the provider names its options. */
       const [aiEffort, setAiEffort] = useState('');
       const [selected, setSelected] = useState(null);
@@ -3374,7 +3378,10 @@ window.__ModuleLoader__.load({
             // An out-of-date answer is shown, not hidden: the reviewer may be
             // comparing against it, and only they decide whether to regenerate.
             if (value?.last?.document !== undefined && value.last.document !== null) {
-              setAiStale(value.last);
+              // Only the code moving on marks the answer out of date; a changed
+              // conversation digest is shown as a note, not as "expired".
+              setAiStale(value.last.staleReason === null ? null : value.last);
+              setAiContextMoved(value.last.contextMoved === true);
               setAiDocument((current) => current ?? value.last.document);
             }
             const held = flowClientCache.get(aiKey);
@@ -3923,6 +3930,13 @@ window.__ModuleLoader__.load({
                 : null,
             // Saying which cache an answer would come from is the difference
             // between "it worked" and "I cannot tell".
+            aiContextMoved && aiStale === null
+              ? h(
+                  'div',
+                  { style: { fontSize: 11, opacity: 0.7 } },
+                  t.aiContextMoved
+                )
+              : null,
             aiStale !== null
               ? h(
                   'div',
