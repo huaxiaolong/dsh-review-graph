@@ -1,0 +1,11 @@
+{
+  "name": "Prism.js",
+  "version": "1.29.0",
+  "license": "MIT",
+  "source": "https://github.com/PrismJS/prism",
+  "fetched": "vendor/prism/ is fetched by `node build-vendor.mjs`; only the attribution files are committed",
+  "bundle": "prism.bundle.js (generated; do not edit)",
+  "languages": 297,
+  "regeneratedBy": "node build-vendor.mjs",
+  "why": "A profile-installed client plugin cannot require() an npm package: the client module table only resolves platform seeds, materialized modules, and registered package factories."
+}

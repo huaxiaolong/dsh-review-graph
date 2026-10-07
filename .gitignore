@@ -1,0 +1,11 @@
+node_modules/
+*.tgz
+.DS_Store
+
+# Prism is a build-time dependency: its components are fetched, not committed.
+# The attribution files (LICENSE, NOTICE.md, manifest.json) stay tracked because
+# MIT requires them to ship with the bundle.
+vendor/prism/components/
+vendor/prism/components.json
+vendor/prism/prism-core.min.js
+

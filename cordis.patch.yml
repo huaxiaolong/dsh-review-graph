@@ -1,0 +1,6 @@
+# review-graph bundle row. The Client half is selected by dsh.client in
+# package.json; this row owns the Host registration.
+- insert:
+    - id: review-graph
+      name: 'dsh-review-graph'
+      config: {}

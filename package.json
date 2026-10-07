@@ -1,0 +1,74 @@
+{
+  "name": "dsh-review-graph",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Review a change set as a relationship graph in the middle column, with every node clickable to the exact source line.",
+  "exports": {
+    ".": "./index.js",
+    "./client": "./client.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json"
+  },
+  "files": [
+    "index.js",
+    "client.js",
+    "lib",
+    "locale",
+    "icon.svg",
+    "cordis.patch.yml",
+    "prism.bundle.js",
+    "vendor/prism/LICENSE",
+    "vendor/prism/NOTICE.md",
+    "vendor/prism/manifest.json",
+    "LICENSE",
+    "README.md"
+  ],
+  "icon": "./icon.svg",
+  "meta": {
+    "title": "Review Graph",
+    "description": "Turn this turn's changed files into a clickable relationship graph."
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "license": "MIT",
+  "author": "huaxiaolong <https://github.com/huaxiaolong>",
+  "homepage": "https://github.com/huaxiaolong/dsh-review-graph",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huaxiaolong/dsh-review-graph.git"
+  },
+  "bugs": {
+    "url": "https://github.com/huaxiaolong/dsh-review-graph/issues"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "code-review",
+    "diff",
+    "change-set",
+    "dependency-graph",
+    "syntax-highlighting",
+    "prism"
+  ],
+  "scripts": {
+    "test": "node test/selftest.mjs && node test/git-scopes.mjs && node test/host-routes.mjs && node test/diff-parse.mjs && node test/flow-parse.mjs",
+    "build": "node build-vendor.mjs && node build-client.mjs",
+    "verify": "node build-vendor.mjs && node build-client.mjs && npm test",
+    "prepublishOnly": "npm run verify",
+    "prefetch": "node build-vendor.mjs --fetch",
+    "verify:offline": "node build-vendor.mjs --offline && node build-client.mjs && npm test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

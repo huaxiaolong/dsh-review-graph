@@ -1,0 +1,10 @@
+{
+  "meta": {
+    "title": "Review Graph",
+    "description": "Turn this turn's changed files into a clickable relationship graph."
+  },
+  "view": "Change graph",
+  "overview": "Overview",
+  "flow": "Flow",
+  "refresh": "Re-analyze"
+}
