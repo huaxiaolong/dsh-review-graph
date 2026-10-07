@@ -21,7 +21,9 @@
     "vendor/prism/NOTICE.md",
     "vendor/prism/manifest.json",
     "LICENSE",
-    "README.md"
+    "README.md",
+    "docs",
+    "CONTRIBUTING.md"
   ],
   "icon": "./icon.svg",
   "meta": {

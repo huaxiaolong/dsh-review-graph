@@ -1,5 +1,8 @@
 # Contributing
 
+User-facing docs live in [README.md](README.md); implementation notes live in
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md).
+
 Thanks for looking. A few things make a PR easy to land here.
 
 ## Before you open one
