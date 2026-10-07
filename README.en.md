@@ -1,6 +1,6 @@
 # dsh-review-graph
 
-[中文](README.md) · English
+[中文](README.md) · English · [![npm](https://img.shields.io/npm/v/dsh-review-graph.svg)](https://www.npmjs.com/package/dsh-review-graph)
 
 **Which files call which, how far a change reaches, and where every edit actually is** — read it inside
 the conversation instead of opening files one by one.
@@ -21,14 +21,14 @@ Three surfaces, in the conversation's middle column:
 Requirements: DSH (Host and Web), and the workspace you review is a **git repository**.
 
 ```bash
-# 1) from git (no account needed — recommended)
+# 1) from npm (recommended)
+dsh plugin --profile <profile> add dsh-review-graph
+
+# 2) from git (no account needed)
 dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph
 
-# 2) from the release tarball (no npm account needed)
+# 3) from the release tarball (no npm account needed; pins a version)
 dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph/releases/latest/download/dsh-review-graph-1.0.0.tgz
-
-# 3) from npm
-dsh plugin --profile <profile> add dsh-review-graph
 ```
 
 Or in the GUI: **Plugins** in the sidebar → **Add plugin** → paste any of the above (package name, git

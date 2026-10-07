@@ -1,6 +1,6 @@
 # dsh-review-graph
 
-[English](README.en.md) · 中文
+[English](README.en.md) · 中文 · [![npm](https://img.shields.io/npm/v/dsh-review-graph.svg)](https://www.npmjs.com/package/dsh-review-graph)
 
 一次变更里**哪些文件互相调用、影响面多大、每处改动到底在哪一行**——在会话里直接看懂，不用在编辑器里一个个翻。
 
@@ -20,14 +20,14 @@
 要求：DSH（Host + Web 端），被审查的工作区是 **git 仓库**。
 
 ```bash
-# 1) 从 git（无需任何账号，推荐）
+# 1) 从 npm（推荐）
+dsh plugin --profile <profile> add dsh-review-graph
+
+# 2) 从 git（无需任何账号）
 dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph
 
-# 2) 从 Release 里的 tarball（无需 npm 账号）
+# 3) 从 Release 里的 tarball（无需 npm 账号，可钉死版本）
 dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph/releases/latest/download/dsh-review-graph-1.0.0.tgz
-
-# 3) 从 npm
-dsh plugin --profile <profile> add dsh-review-graph
 ```
 
 或在 GUI 里：侧栏「**插件**」→ **Add plugin** → 粘贴上面任意一种（包名、git 地址、tarball 地址或本地路径）。
