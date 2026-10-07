@@ -1646,6 +1646,10 @@ window.__ModuleLoader__.load({
       const [selected, setSelected] = useState(parsed?.path ?? null);
 
       const highlight = useHighlighter(selected ?? parsed?.path ?? '');
+      /** The scrolling box, the row to reveal, and the hunk to fall back to. */
+      const bodyRef = useRef(null);
+      const targetRowRef = useRef(null);
+      const nearestHunkRef = useRef(null);
       const scope = typeof params.scope === 'string' ? params.scope : 'unstaged';
       const cwd = typeof params.cwd === 'string' ? params.cwd : undefined;
       const seq = Number.isSafeInteger(params.seq) ? params.seq : undefined;
@@ -1688,6 +1692,24 @@ window.__ModuleLoader__.load({
 
       // The change set of the whole source, so the pane walks it file by file
       // instead of being one file's dead end.
+      // A highlight the reader cannot see is not a jump. Scroll the pane itself —
+      // never the page around it — so the target row lands near the middle.
+      useEffect(() => {
+        if (line === undefined) return undefined;
+        const container = bodyRef.current;
+        if (container === null || container === undefined) return undefined;
+        const row = targetRowRef.current ?? nearestHunkRef.current;
+        if (row === null || row === undefined) return undefined;
+        const rowHeight = row.clientHeight ?? 0;
+        const view = container.clientHeight ?? 0;
+        const top = row.offsetTop ?? 0;
+        const next = Math.max(0, top - Math.max(0, (view - rowHeight) / 2));
+        // Assigning scrollTop moves this pane alone; scrollIntoView could also
+        // move the conversation behind it.
+        container.scrollTop = next;
+        return undefined;
+      }, [state.document, line, endLine, selected]);
+
       // The column keeps one tab, so a new file arrives as a new navigation.
       useEffect(() => {
         if (typeof params.path === 'string' && params.path !== '') setSelected(params.path);
@@ -1880,6 +1902,7 @@ window.__ModuleLoader__.load({
                   padding: '2px 8px',
                   ...(hunkIndex === nearest
                     ? {
+                        ref: nearestHunkRef,
                         boxShadow:
                           'inset 3px 0 0 0 var(--dsw-alias-border-focus, rgba(88,166,255,.95))',
                       }
@@ -1901,6 +1924,7 @@ window.__ModuleLoader__.load({
                 'div',
                 {
                   key: `line-${hunkIndex}-${lineIndex}`,
+                  ref: target ? targetRowRef : undefined,
                   style: {
                     display: 'flex',
                     gap: 8,
@@ -1961,7 +1985,11 @@ window.__ModuleLoader__.load({
             );
           }
         }
-        body = h('div', { style: { overflow: 'auto', padding: '6px 0', flex: 1 } }, rows);
+        body = h(
+          'div',
+          { ref: bodyRef, style: { overflow: 'auto', padding: '6px 0', flex: 1 } },
+          rows
+        );
       }
 
       const rail =

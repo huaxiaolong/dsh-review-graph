@@ -1415,6 +1415,19 @@ process.stdout.write('loaded-state rendering\n');
       source.includes('flowColumn(selectedFlow.before')
   );
   check(
+    'the pane scrolls itself to the line it jumped to',
+    // Highlighting a row that stays below the fold is not a jump.
+    source.includes('const bodyRef = useRef(null)') &&
+      source.includes('const targetRowRef = useRef(null)') &&
+      source.includes('const nearestHunkRef = useRef(null)') &&
+      source.includes('ref: target ? targetRowRef : undefined') &&
+      source.includes('container.scrollTop = next') &&
+      // Never scrollIntoView: it would drag the conversation behind the pane.
+      !source.includes('scrollIntoView(') &&
+      // The fallback: a line outside every hunk reveals the nearest change block.
+      source.includes('targetRowRef.current ?? nearestHunkRef.current')
+  );
+  check(
     'the jumped-to line is marked with a left bar, not a row background',
     source.includes("boxShadow: 'inset 3px 0 0 0 var(--dsw-alias-border-focus") &&
       // The diff row must not paint a background over the add/remove fills; the
