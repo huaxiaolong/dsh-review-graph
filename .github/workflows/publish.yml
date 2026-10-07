@@ -31,14 +31,16 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org
 
-      # Trusted publishing needs an npm CLI that speaks OIDC (11.5.1 or later);
-      # the CLI bundled with Node 20 is older, and the failure it gives looks like
-      # an authentication problem rather than a version one.
-      - name: Use a CLI that supports trusted publishing
-        run: npm install -g npm@latest && npm --version
+      # Trusted publishing needs an npm CLI that speaks OIDC (11.5.1 or later),
+      # which Node 20's bundled npm is not. Pin the major on purpose: `npm@latest`
+      # is npm 12, which requires Node ^22.22.2 and fails the install on a runner
+      # whose Node is older than that — an engine error during setup, before
+      # anything of this package has run.
+      - name: Use an npm that supports trusted publishing
+        run: npm install -g npm@11 && npm --version
 
       # Prism is a build-time dependency; the build fetches it.
       - name: Build

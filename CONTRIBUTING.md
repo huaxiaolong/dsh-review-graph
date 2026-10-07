@@ -45,7 +45,9 @@ After that, configure **Trusted publishing** on the package's settings page — 
 repository `huaxiaolong/dsh-review-graph`, workflow file name `publish.yml`, environment name left empty —
 and let `.github/workflows/publish.yml` do the rest. It needs no stored secret and publishes with
 provenance. Two details decide whether it works: the workflow must ask for `id-token: write` (it does), and
-the npm CLI must be 11.5.1 or newer, which is why the workflow upgrades it before publishing:
+the npm CLI must be 11.5.1 or newer — Node 20's bundled npm is older, so the workflow installs `npm@11`
+first. Pin the major rather than using `npm@latest`: npm 12 requires Node 22.22.2 or newer, and asking for
+it on an older runner fails the install with an engine error before the build even starts.
 
 ```bash
 # bump version in package.json, commit, push
