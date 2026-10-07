@@ -1662,6 +1662,9 @@ window.__ModuleLoader__.load({
       const [state, setState] = useState({ phase: 'loading' });
       const [changeSet, setChangeSet] = useState(null);
       const [selected, setSelected] = useState(parsed?.path ?? null);
+      // Declared with the rest of the pane's state: the header below reads it, and
+      // a `useState` after its first reader is a temporal-dead-zone crash.
+      const [railOpen, setRailOpen] = useState(true);
 
       const highlight = useHighlighter(selected ?? parsed?.path ?? '');
       /** The scrolling box, the row to reveal, and the hunk to fall back to. */
@@ -2024,7 +2027,6 @@ window.__ModuleLoader__.load({
 
       // The file list sits on the right and folds away: the diff is what is being
       // read, and a rail that cannot be dismissed costs width on every file.
-      const [railOpen, setRailOpen] = useState(true);
       const rail =
         railOpen && files.length > 0
           ? h(
@@ -4813,6 +4815,7 @@ window.__ModuleLoader__.load({
       __test__: {
         ReviewGraphView,
         ReviewGraphBody,
+        ReviewPane,
         layoutGraph,
         modelForGeneration,
         modelNameText,
@@ -4873,7 +4876,10 @@ window.__ModuleLoader__.load({
                   h(
                     ViewBoundary,
                     { label: 'review pane' },
-                    ReviewPane({ ...paneProps, t: titleOf })
+                    // An element, not a call: calling the component here runs it
+                    // outside the boundary, so a crash inside it produced a blank
+                    // pane instead of the boundary's message.
+                    h(ReviewPane, { ...paneProps, t: titleOf })
                   )
               )
             ),

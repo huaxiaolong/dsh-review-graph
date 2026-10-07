@@ -645,6 +645,51 @@ process.stdout.write('render smoke test\n');
     );
   }
 
+  // Three of the four blank-pane crashes came from this pane (a temporal-dead-zone
+  // name, a name from another scope, a deleted name) and it was never rendered
+  // here. It is now, with its network calls stubbed.
+  try {
+    const paneComponent = factoryResult.__test__?.ReviewPane;
+    check('the pane is exposed for its own smoke test', typeof paneComponent === 'function');
+    const realFetch = globalThis.fetch;
+    // A non-empty file list on purpose: the header's rail button only renders
+    // when there are files, and that is the code path a blank pane came from.
+    globalThis.fetch = async (url) => ({
+      ok: true,
+      json: async () =>
+        String(url).includes('.files')
+          ? { files: [{ path: 'a.ts', status: 'M', added: 1, deleted: 0 }] }
+          : { path: 'a.ts', hunks: [], additions: 0, deletions: 0 },
+      text: async () => '{}',
+    });
+    try {
+      const paneProps = {
+        t: (key) => `t:${key}`,
+        useTabInfo: () => ({
+          tab: {
+            contentId: 'dsh-resource://review-graph/session/s1',
+            navigation: { params: { cwd: '/repo', scope: 'unstaged', path: 'a.ts', line: 3 } },
+            actions: { openResource: () => {} },
+          },
+        }),
+      };
+      // One pass: this catches the errors that happen while the pane first
+      // renders (two of the three blank-pane crashes lived there). A second-render
+      // crash, where fetched state reveals the faulty code, still needs a fuller
+      // replay harness than this file has.
+      const pane = renderElement(paneComponent, paneProps, 0);
+      check('the review pane renders without a free name', pane !== undefined && pane !== null);
+    } finally {
+      globalThis.fetch = realFetch;
+    }
+  } catch (error) {
+    check(
+      'the review pane renders without a free name',
+      false,
+      error && error.message ? error.message : String(error)
+    );
+  }
+
   // Walk the tree and count how many distinct element types came out; a render
   // that produced nothing would still "succeed" above.
   let elements = 0;
@@ -1414,6 +1459,13 @@ process.stdout.write('loaded-state rendering\n');
       source.includes('zoom: aiZoom') &&
       source.includes('width: `${Math.round((zoom ?? 1) * 100)}%`') &&
       source.includes("aiZoomFit: '适应'")
+  );
+  check(
+    'the review pane is rendered as an element inside its boundary',
+    // Calling the component at the registration site ran it outside the boundary,
+    // so a crash in it showed an empty pane instead of the boundary's message.
+    source.includes('h(ReviewPane, { ...paneProps, t: titleOf })') &&
+      !source.includes('ReviewPane({ ...paneProps, t: titleOf })')
   );
   check(
     'the changed-file list is on the right and folds away',
