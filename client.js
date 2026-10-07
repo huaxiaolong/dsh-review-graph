@@ -660,6 +660,8 @@ window.__ModuleLoader__.load({
         noBase: '（没有其他分支可作为对比基准）',
         reviewTitle: '变更审查',
         reviewOpenFile: '在文件中打开',
+        reviewRailHide: '收起变更文件列表',
+        reviewRailShow: '展开变更文件列表',
         reviewNoDiff: '这个文件在该变更来源下没有文本差异。',
         reviewBinary: '二进制文件，无法按文本比对。',
         reviewOversized: '文件超出内联比对的上限。',
@@ -697,6 +699,10 @@ window.__ModuleLoader__.load({
         aiNoAdapters: '这个 profile 没有挂模型适配器，无法生成。',
         aiPickFlow: '受影响业务',
         aiBefore: '原版流程',
+        aiHideBefore: '隐藏原版流程',
+        aiShowBefore: '显示原版流程',
+        aiZoom: '缩放',
+        aiZoomFit: '适应',
         aiAfter: '改动后',
         aiEmptySide: '（这一侧没有可展示的步骤）',
         aiNoAnchor: '这个节点没有给出文件，已打开该来源的审查面板。',
@@ -797,6 +803,8 @@ window.__ModuleLoader__.load({
         noBase: '(no other branch to compare against)',
         reviewTitle: 'Review',
         reviewOpenFile: 'Open in file',
+        reviewRailHide: 'Hide the changed-file list',
+        reviewRailShow: 'Show the changed-file list',
         reviewNoDiff: 'This file has no textual difference in this change source.',
         reviewBinary: 'Binary file, no text comparison.',
         reviewOversized: 'The file is past the inline comparison limit.',
@@ -834,6 +842,10 @@ window.__ModuleLoader__.load({
         aiNoAdapters: 'This profile mounts no model adapter, so this cannot run.',
         aiPickFlow: 'Affected processes',
         aiBefore: 'Before',
+        aiHideBefore: 'Hide the original flow',
+        aiShowBefore: 'Show the original flow',
+        aiZoom: 'Zoom',
+        aiZoomFit: 'Fit',
         aiAfter: 'After',
         aiEmptySide: '(nothing to show on this side)',
         aiNoAnchor: 'This step names no file, so the source\'s review was opened instead.',
@@ -1177,7 +1189,7 @@ window.__ModuleLoader__.load({
      * their branch labels. Clicking a box opens the review pane at its anchor.
      */
     function FlowDiagram(props) {
-      const { side, sideName, onOpen, emptyText, noAnchorText, selectedId } = props;
+      const { side, sideName, onOpen, emptyText, noAnchorText, selectedId, zoom } = props;
       const layout = useMemo(() => layoutFlow(side), [side]);
       if (layout.nodes.length === 0) {
         return h('div', { style: { fontSize: 11, opacity: 0.5 } }, emptyText);
@@ -1187,14 +1199,19 @@ window.__ModuleLoader__.load({
       const isSelected = (node) =>
         selectedId !== undefined && selectedId !== null && selectedId === node.id;
       const arrow = 'flow-arrow';
+      // Zooming scales the vector rather than the pixel grid: wrapping the svg in
+      // a scrollable box and widening it keeps text sharp at any factor.
       return h(
-        'svg',
-        {
-          viewBox: `0 0 ${layout.width} ${layout.height}`,
-          width: '100%',
-          style: { maxHeight: 520, display: 'block' },
-          role: 'img',
-        },
+        'div',
+        { style: { overflow: 'auto', maxHeight: 560 } },
+        h(
+          'svg',
+          {
+            viewBox: `0 0 ${layout.width} ${layout.height}`,
+            width: `${Math.round((zoom ?? 1) * 100)}%`,
+            style: { display: 'block' },
+            role: 'img',
+          },
         h(
           'defs',
           null,
@@ -1302,6 +1319,7 @@ window.__ModuleLoader__.load({
               )
             )
           )
+        )
         )
       );
     }
@@ -1865,6 +1883,18 @@ window.__ModuleLoader__.load({
               },
               base('reviewOpenFile')
             )
+          : null,
+        // Next to "open in file", as asked: one row of panel-level controls.
+        files.length > 0
+          ? h(
+              Button,
+              {
+                active: railOpen,
+                onClick: () => setRailOpen((value) => !value),
+                title: copyText(base, railOpen ? 'reviewRailHide' : 'reviewRailShow'),
+              },
+              railOpen ? '›' : '‹'
+            )
           : null
       );
 
@@ -1992,8 +2022,11 @@ window.__ModuleLoader__.load({
         );
       }
 
+      // The file list sits on the right and folds away: the diff is what is being
+      // read, and a rail that cannot be dismissed costs width on every file.
+      const [railOpen, setRailOpen] = useState(true);
       const rail =
-        files.length > 0
+        railOpen && files.length > 0
           ? h(
               'div',
               {
@@ -2059,8 +2092,9 @@ window.__ModuleLoader__.load({
         h(
           'div',
           { style: { display: 'flex', flex: 1, minHeight: 0 } },
-          rail,
-          h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 } }, body)
+          h('div', { style: { display: 'flex', flexDirection: 'column', flex: 1, minWidth: 0 } }, body),
+          // Rightmost, after the diff.
+          rail
         )
       );
     }
@@ -3160,6 +3194,10 @@ window.__ModuleLoader__.load({
       const [aiError, setAiError] = useState(null);
       const [aiBusy, setAiBusy] = useState(false);
       const [aiFlow, setAiFlow] = useState(0);
+      /** The original side is optional: a complicated change needs the width. */
+      const [aiBefore, setAiBefore] = useState(true);
+      /** 1 = fit the column; the reader may zoom the diagrams themselves. */
+      const [aiZoom, setAiZoom] = useState(1);
       /** Which step was opened, so its box stays marked. */
       const [aiNode, setAiNode] = useState(null);
       // A different diagram has different steps: the mark is dropped with it.
@@ -3884,6 +3922,7 @@ window.__ModuleLoader__.load({
           h(FlowDiagram, {
             side,
             sideName,
+            zoom: aiZoom,
             selectedId: aiNode !== null && aiNode.startsWith(`${sideName}:`) ? aiNode.slice(sideName.length + 1) : null,
             onOpen: openAnchor,
             emptyText: t.aiEmptySide,
@@ -4113,9 +4152,33 @@ window.__ModuleLoader__.load({
                   ? null
                   : h(
                       'div',
-                      { style: { display: 'flex', gap: 10, alignItems: 'flex-start' } },
-                      flowColumn(selectedFlow.before, t.aiBefore, 'before'),
-                      flowColumn(selectedFlow.after, t.aiAfter, 'after')
+                      { style: { display: 'flex', flexDirection: 'column', gap: 8 } },
+                      h(
+                        'div',
+                        { style: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' } },
+                        h(
+                          Button,
+                          { active: aiBefore, onClick: () => setAiBefore((value) => !value) },
+                          aiBefore ? t.aiHideBefore : t.aiShowBefore
+                        ),
+                        h('span', { style: { opacity: 0.5 } }, t.aiZoom),
+                        h(Button, { onClick: () => setAiZoom((z) => Math.max(0.5, z - 0.25)) }, '−'),
+                        h(
+                          'span',
+                          { style: { fontSize: 11, opacity: 0.7, minWidth: 38, textAlign: 'center' } },
+                          `${Math.round(aiZoom * 100)}%`
+                        ),
+                        h(Button, { onClick: () => setAiZoom((z) => Math.min(4, z + 0.25)) }, '+'),
+                        h(Button, { onClick: () => setAiZoom(1) }, t.aiZoomFit)
+                      ),
+                      // The original side is worth keeping, but a complicated
+                      // change needs the whole width: it folds on request.
+                      h(
+                        'div',
+                        { style: { display: 'flex', gap: 10, alignItems: 'flex-start' } },
+                        aiBefore ? flowColumn(selectedFlow.before, t.aiBefore, 'before') : null,
+                        flowColumn(selectedFlow.after, t.aiAfter, 'after')
+                      )
                     ),
                 // Summary, risks and basis are gone: the diagram is the answer,
                 // and a wall of prose under it was never read.,

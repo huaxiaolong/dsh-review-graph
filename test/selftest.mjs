@@ -1406,6 +1406,25 @@ process.stdout.write('loaded-state rendering\n');
       source.includes('t.aiNoAnchor')
   );
   check(
+    'the original flow can fold away, and the diagrams zoom',
+    // A complicated change squeezed both diagrams until neither was readable.
+    source.includes('const [aiBefore, setAiBefore] = useState(true)') &&
+      source.includes('const [aiZoom, setAiZoom] = useState(1)') &&
+      source.includes("aiBefore ? flowColumn(selectedFlow.before, t.aiBefore, 'before') : null") &&
+      source.includes('zoom: aiZoom') &&
+      source.includes('width: `${Math.round((zoom ?? 1) * 100)}%`') &&
+      source.includes("aiZoomFit: '适应'")
+  );
+  check(
+    'the changed-file list is on the right and folds away',
+    source.includes('const [railOpen, setRailOpen] = useState(true)') &&
+      source.includes('railOpen && files.length > 0') &&
+      // placement: body first, rail after it
+      source.includes('flexDirection: \'column\', flex: 1, minWidth: 0 } }, body),') &&
+      source.includes('reviewRailHide') &&
+      source.includes('reviewRailShow')
+  );
+  check(
     'the prose panel is gone: the diagram is the answer',
     // Summary, risks and basis sat behind a "more" toggle under the diagram; the
     // reader asked for the picture, not a page of text.
