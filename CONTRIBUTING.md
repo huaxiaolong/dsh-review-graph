@@ -41,9 +41,11 @@ package does:
 npm publish --otp=<code from the authenticator>
 ```
 
-After that, configure **Trusted publishing** on the package's settings page (repository
-`huaxiaolong/dsh-review-graph`, workflow `publish.yml`) and let `.github/workflows/publish.yml` do the
-rest — it needs no stored secret, and it publishes with provenance:
+After that, configure **Trusted publishing** on the package's settings page — publisher *GitHub Actions*,
+repository `huaxiaolong/dsh-review-graph`, workflow file name `publish.yml`, environment name left empty —
+and let `.github/workflows/publish.yml` do the rest. It needs no stored secret and publishes with
+provenance. Two details decide whether it works: the workflow must ask for `id-token: write` (it does), and
+the npm CLI must be 11.5.1 or newer, which is why the workflow upgrades it before publishing:
 
 ```bash
 # bump version in package.json, commit, push
