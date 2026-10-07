@@ -3440,8 +3440,14 @@ window.__ModuleLoader__.load({
             return;
           }
           setOpenError(null);
-          const anchor = (node.anchors ?? [])[0];
-          const path = anchor?.path ?? (node.files ?? [])[0];
+          // A business step belongs in the code that implements it. A model that
+          // anchored a step to a paragraph of documentation gave a target the
+          // reader cannot use, so a source file wins whenever one is offered —
+          // the document stays as the last resort rather than as the destination.
+          const anchors = Array.isArray(node.anchors) ? node.anchors : [];
+          const anchor = anchors.find((candidate) => isSourcePath(candidate?.path)) ?? anchors[0];
+          const files = Array.isArray(node.files) ? node.files : [];
+          const path = anchor?.path ?? files.find((candidate) => isSourcePath(candidate)) ?? files[0];
           const scope =
             scopeSpecFor(source, { base: baseRef, commit: commitRef }) ?? 'unstaged';
           const base = { cwd: root, scope };
@@ -4728,6 +4734,7 @@ window.__ModuleLoader__.load({
         ReviewGraphBody,
         layoutGraph,
         modelForGeneration,
+        isSourcePath,
         analyze,
         unwrapRemote,
         listSourceFiles,

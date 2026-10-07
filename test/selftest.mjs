@@ -1415,6 +1415,16 @@ process.stdout.write('loaded-state rendering\n');
       source.includes('flowColumn(selectedFlow.before')
   );
   check(
+    'a step prefers a source file over a document',
+    // A flow diagram whose steps land in Markdown is not answering "where is
+    // this implemented"; the document stays available, but second.
+    source.includes('anchors.find((candidate) => isSourcePath(candidate?.path)) ?? anchors[0]') &&
+      source.includes('files.find((candidate) => isSourcePath(candidate)) ?? files[0]') &&
+      testHooks.isSourcePath('src/a.ts') === true &&
+      testHooks.isSourcePath('Docs/00_Index.md') === false &&
+      testHooks.isSourcePath('README.md') === false
+  );
+  check(
     'the pane scrolls itself to the line it jumped to',
     // Highlighting a row that stays below the fold is not a jump.
     source.includes('const bodyRef = useRef(null)') &&
