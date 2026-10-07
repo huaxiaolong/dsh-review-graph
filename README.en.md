@@ -28,7 +28,7 @@ dsh plugin --profile <profile> add dsh-review-graph
 dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph
 
 # 3) from the release tarball (no npm account needed; pins a version)
-dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph/releases/latest/download/dsh-review-graph-1.0.0.tgz
+dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph/releases/download/v1.0.0/dsh-review-graph-1.0.0.tgz
 ```
 
 Or in the GUI: **Plugins** in the sidebar → **Add plugin** → paste any of the above (package name, git

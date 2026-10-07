@@ -27,7 +27,7 @@ dsh plugin --profile <profile> add dsh-review-graph
 dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph
 
 # 3) 从 Release 里的 tarball（无需 npm 账号，可钉死版本）
-dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph/releases/latest/download/dsh-review-graph-1.0.0.tgz
+dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph/releases/download/v1.0.0/dsh-review-graph-1.0.0.tgz
 ```
 
 或在 GUI 里：侧栏「**插件**」→ **Add plugin** → 粘贴上面任意一种（包名、git 地址、tarball 地址或本地路径）。
