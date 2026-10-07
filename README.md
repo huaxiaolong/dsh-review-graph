@@ -20,12 +20,19 @@
 要求：DSH（Host + Web 端），被审查的工作区是 **git 仓库**。
 
 ```bash
-# 从 npm
-dsh plugin --profile <profile> add dsh-review-graph
-
-# 或从 git
+# 1) 从 git（无需任何账号，推荐）
 dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph
+
+# 2) 从 Release 里的 tarball（无需 npm 账号）
+dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph/releases/latest/download/dsh-review-graph-1.0.0.tgz
+
+# 3) 从 npm
+dsh plugin --profile <profile> add dsh-review-graph
 ```
+
+或在 GUI 里：侧栏「**插件**」→ **Add plugin** → 粘贴上面任意一种（包名、git 地址、tarball 地址或本地路径）。
+
+三种方式装的**是同一份代码**，能力完全相同；npm 只是其中一个渠道。
 
 装完**重启 DSH**（Host 半边生效），刷新页面（Client 半边生效），然后在会话中间栏切到「变更关系图」。
 

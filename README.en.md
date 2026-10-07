@@ -21,12 +21,20 @@ Three surfaces, in the conversation's middle column:
 Requirements: DSH (Host and Web), and the workspace you review is a **git repository**.
 
 ```bash
-# from npm
-dsh plugin --profile <profile> add dsh-review-graph
-
-# or from git
+# 1) from git (no account needed — recommended)
 dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph
+
+# 2) from the release tarball (no npm account needed)
+dsh plugin --profile <profile> add https://github.com/huaxiaolong/dsh-review-graph/releases/latest/download/dsh-review-graph-1.0.0.tgz
+
+# 3) from npm
+dsh plugin --profile <profile> add dsh-review-graph
 ```
+
+Or in the GUI: **Plugins** in the sidebar → **Add plugin** → paste any of the above (package name, git
+address, tarball URL, or a local path).
+
+All three install the same code with the same capabilities; npm is one channel, not a requirement.
 
 Restart DSH afterwards (the Host half is regenerated) and reload the page (the client half), then switch
 the middle column to “Relationship graph”.
