@@ -50,6 +50,19 @@ rest — it needs no stored secret, and it publishes with provenance:
 git tag v<version> && git push origin v<version>
 ```
 
+### Release artifacts and their hashes
+
+Publish the artifact `npm pack` produced — not a tarball assembled by hand. `npm pack` normalises file
+mtimes and entry order, so the same sources produce the same bytes; a `tar -czf` of the same files does
+not, and the registry's `shasum` will not match anything you can reproduce. If a GitHub release carries a
+tarball, attach the one `npm pack` wrote, so the two channels share one hash.
+
+Check the published one with:
+
+```bash
+npm view dsh-review-graph dist.shasum dist.tarball
+```
+
 Why OIDC rather than an `NPM_TOKEN`: npm is removing direct publish from tokens that bypass 2FA
 (targeted for January 2027), so a stored token would stop working. Trusted publishing replaces it with a
 short-lived credential minted per run.
