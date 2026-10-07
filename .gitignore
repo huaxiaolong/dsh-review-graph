@@ -9,3 +9,7 @@ vendor/prism/components/
 vendor/prism/components.json
 vendor/prism/prism-core.min.js
 
+# 发布凭据与本地杂物：绝不能进仓库
+.npmrc
+.env
+*.log
